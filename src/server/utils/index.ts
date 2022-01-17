@@ -47,46 +47,31 @@ export function totpValidate(totp: string, secret: string): boolean {
 }
 
 export function responseHandler(r, h) {
-  // Handle default hapi errors (like not found, etc.)
-  if (r.response.isBoom && r.response.data === null) {
-    r.response = h
-      .response({
-        ok: false,
-        code: Math.floor(r.response.output.statusCode * 1000),
-        data: {},
-        msg: r.response.message,
-      })
-      .code(r.response.output.statusCode);
-    return h.continue;
-  }
+  try {
+    const additionalHeaders = {
+      'access-control-allow-credentials': true,
+      'access-control-allow-origin': '*'
+    };
+    if (r.app.error || (r.response.isBoom && r.response.data)) {
+      const errorData = r.app.error ? r.app.error.data : r.response.data;
+      const {message} = r.app.error ? r.app.error.output.payload : r.response.output.payload;
+      if (r.response.data && r.response.data.custom) {
+        r.response = h.response({
+          ok: false,
+          statusCode: Math.floor(errorData.code / 1000),
+          data: errorData.data,
+          message
+        }).code(Math.floor(errorData.code / 1000));
+      }
 
-  // Handle custom api error
-  if (r.response.isBoom && r.response.data.api) {
-    r.response = h
-      .response({
-        ok: false,
-        code: r.response.data.code,
-        data: r.response.data.data,
-        msg: r.response.output.payload.message,
-      })
-      .code(Math.floor(r.response.data.code / 1000));
-    return h.continue;
-  }
+      return h.continue;
+    }
 
-  // Handle non api errors with data
-  if (r.response.isBoom && !r.response.data.api) {
-    r.response = h
-      .response({
-        ok: false,
-        code: Math.floor(r.response.output.statusCode * 1000),
-        data: r.response.data,
-        msg: r.response.message,
-      })
-      .code(r.response.output.statusCode);
+    r.response.headers = {...r.response.headers, ...additionalHeaders};
     return h.continue;
+  } catch (e) {
+    console.log(e);
   }
-
-  return h.continue;
 }
 
 export async function handleValidationError(r, h, err) {
