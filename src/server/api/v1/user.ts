@@ -70,28 +70,3 @@ export const authUser = async (r) => {
 
 }
 
-export const updateUser = async (r) => {
-
-  const { id } = r.auth.credentials
-
-  // console.log(user)
-
-  const user = await User.findOne({
-    where: {
-      id: id
-    }
-  })
-
-  user.set({
-    username: r.payload.username,
-    ppassword: r.payload.password,
-    phone: r.payload.phone,
-    dateOfBirth: r.payload.dateOfBirth,
-    sex: r.payload.sex
-  })
-
-  await user.save()
-
-  return user
-
-}
