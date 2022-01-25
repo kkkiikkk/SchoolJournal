@@ -46,6 +46,18 @@ export default [
     },
     handler: createUser
   },
-  
+  {
+    method: 'POST',
+    path: '/v1/login',
+    options: {
+      auth: false,
+      id: 'v1.login.post',
+      tags: ['api', 'v1', 'login'],
+      validate: {
+        payload: userLogin
+      }
+    },
+    handler: authUser
+  },
   
 ];
